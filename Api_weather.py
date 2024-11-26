@@ -8,12 +8,10 @@ API = 'bSxseO5nsaAgbkjld3zBGMnyy3mbZlvr'
 class AccuWeather:
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.location_key = 3369279
+        self.location_key = 3369279 #Moscow
 
     def send_request(self,lat,lng):
-        '''
-        Отправка запроса на сервер. Это может быть либо адрес, либо координаты.
-        '''
+
         #location_key = self.get_location_key(lat,lng)
 
         weather_data = self.get_weather()
@@ -64,9 +62,27 @@ class AccuWeather:
         }
 
         with open('weather_info.json', 'w') as f:
-            json.dump(result, f)
+            json.dump(result, f, indent=4)
 
 
-Moscow = AccuWeather(API)
-Moscow.send_request('55.44', '37.36')
-print(Moscow.location_key)
+def check_bad_weather(path):
+    with open(path, 'r') as f:
+        data = json.load(f)
+    flag = True
+    if data["temperature (max)"] > 35 or data["temperature (min)"] < -15: flag = False
+    if data["humidity"] > 90: flag = False
+    if data["wind_speed"] > 15: flag = False
+    if data["precipitation_probability"] >70: flag = False
+
+    if flag:
+        return 'Благоприятные погодные условия'
+    else:
+        return 'Неблагоприятные погодные условия'
+
+
+
+# Moscow = AccuWeather(API)
+# Moscow.send_request('55.44', '37.36')
+# print(Moscow.location_key)
+
+print(check_bad_weather('weather_info.json'))
