@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import requests
 import json
 
@@ -6,31 +6,30 @@ API = 'bSxseO5nsaAgbkjld3zBGMnyy3mbZlvr'
 
 
 class AccuWeather:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key, path):
         self.api_key = api_key
         self.location_key = 3369279 #Moscow
+        self.path = path
 
-    def send_request(self,lat,lng):
+    def send_request(self,city):
 
-        #location_key = self.get_location_key(lat,lng)
+        self.get_location_key(city)
 
         weather_data = self.get_weather()
 
         self.info_to_json(weather_data)
 
-    def get_location_key(self,lat,lng):
-        location_url = f"http://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey={self.api_key}&q={lat},{lng}"
+    def get_location_key(self,city):
+        location_url = f"http://dataservice.accuweather.com/locations/v1/cities/search?apikey={self.api_key}&q={city}"
         response = requests.get(location_url)
         location_data = response.json()
 
         if response.status_code == 200:
-            self.location_key = location_data['Key']
+            self.location_key = location_data[0]['Key']
         elif response.status_code == 403:
             print('Доступ запрещён: некорректный адрес или координаты')
-            exit()
         else:
             print('Произошла ошибка на сервере')
-            exit()
 
     def get_weather(self):
         weather_url = f"http://dataservice.accuweather.com/forecasts/v1/daily/1day/{self.location_key}?apikey={self.api_key}&details=true&metric=true"
@@ -61,7 +60,7 @@ class AccuWeather:
             "precipitation_probability": precipitation_probability,
         }
 
-        with open('weather_info.json', 'w') as f:
+        with open(self.path, 'w') as f:
             json.dump(result, f, indent=4)
 
 
@@ -81,8 +80,36 @@ def check_bad_weather(path):
 
 
 
-# Moscow = AccuWeather(API)
-# Moscow.send_request('55.44', '37.36')
-# print(Moscow.location_key)
+app = Flask(__name__)
 
-print(check_bad_weather('weather_info.json'))
+@app.route("/", methods=["GET", "POST"])
+def write_city():
+    if request.method == 'GET':
+        return render_template('first_page.html')
+    else:
+        start_city = request.form["startPoint"]
+        end_city = request.form["endPoint"]
+
+        city_1 = AccuWeather(API, 'city_1.json')
+        try:
+            city_1.send_request(start_city)
+            status_city_1 = check_bad_weather('city_1.json')
+        except:
+            status_city_1 = 'Ошибка: Некорректное название города'
+
+
+        city_2 = AccuWeather(API, 'city_2.json')
+        try:
+            city_2.send_request(start_city)
+            status_city_2 = check_bad_weather('city_2.json')
+        except:
+            status_city_2 = 'Ошибка: Некорректное название города'
+
+        return render_template('weather_page.html',
+                               status_city_1 = status_city_1,
+                               status_city_2 = status_city_2,
+                               city_1 = start_city,
+                               city_2 = end_city)
+
+if __name__ == "__main__":
+    app.run(debug=True)
