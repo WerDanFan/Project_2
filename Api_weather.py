@@ -19,22 +19,23 @@ class AccuWeather:
 
     def check_location_key(self,city):
         if os.path.exists('keys_of_cities.json'):
-            with open('keys_of_cities.json', 'r') as f:
+            with open('keys_of_cities.json', 'r', encoding='utf-8') as f:
                 keys = json.load(f)
                 if city in keys:
                     self.location_key = keys[city]
                 else:
                     self.get_location_key(city)
+        else: self.get_location_key(city)
 
     def load_city_keys(self):
         if os.path.exists('keys_of_cities.json'):
-            with open('keys_of_cities.json', 'r') as f:
+            with open('keys_of_cities.json', 'r', encoding='utf-8') as f:
                 return json.load(f)
         else:
             return {}
 
     def save_city_keys(self, city_keys):
-        with open('keys_of_cities.json', 'w') as f:
+        with open('keys_of_cities.json', 'w', encoding="utf-8") as f:
             json.dump(city_keys, f, indent=4)
 
     def get_location_key(self, city):
@@ -42,27 +43,38 @@ class AccuWeather:
         response = requests.get(location_url)
         location_data = response.json()
 
-        if response.status_code == 200:
-            self.location_key = location_data[0]["Key"]
-            keys = self.load_city_keys()
-            keys[city] = self.location_key
-            self.save_city_keys(keys)
-        elif response.status_code == 403:
-            raise Exception("Упс. Неверно введён город")
+        if location_data:
+            if response.status_code == 200:
+                self.location_key = location_data[0]["Key"]
+                keys = self.load_city_keys()
+                keys[city] = self.location_key
+                self.save_city_keys(keys)
+            elif response.status_code == 403:
+                raise Exception("Упс. Неверный API key")
+            elif response.status_code == 503:
+                raise Exception("Упс. Закончились запросы API. Попробуйте позже.")
+            else:
+                raise Exception(f"Произошла ошибка на сервере {response.status_code}")
         else:
-            raise Exception("Произошла ошибка на сервере")
+            raise Exception("Упс. Неверно введён город")
 
     def get_weather(self):
         weather_url = f"http://dataservice.accuweather.com/forecasts/v1/daily/1day/{self.location_key}?apikey={self.api_key}&details=true&metric=true"
         response = requests.get(weather_url)
         weather_data = response.json()
 
-        if response.status_code == 200:
-            return weather_data
-        elif response.status_code == 403:
-            raise Exception("Упс. Неверно введён город")
+        if weather_data:
+            if response.status_code == 200:
+                return weather_data
+            elif response.status_code == 403:
+                raise Exception("Упс. Неверный API key")
+            elif response.status_code == 503:
+                raise Exception("Упс. Закончились запросы API. Попробуйте позже.")
+            else:
+                raise Exception(f"Произошла ошибка на сервере {response.status_code}")
         else:
-            raise Exception("Произошла ошибка на сервере")
+            raise Exception("Упс. Неверно введён город")
+
 
     def info_to_json(self, data):
         temperature_min = data["DailyForecasts"][0]["Temperature"]["Minimum"]["Value"]
@@ -122,7 +134,7 @@ def write_city():
 
         city_2 = AccuWeather(API, "city_2.json")
         try:
-            city_2.send_request(start_city)
+            city_2.send_request(end_city)
             status_city_2 = check_bad_weather("city_2.json")
         except Exception as exc:
             status_city_2 = exc
