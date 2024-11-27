@@ -48,12 +48,12 @@
 
     <div class="weather-info">
         <h2>{{ city_1 }}</h2>
-        <p class="{% if status_city_1 == 'Благоприятные погодные условия' %}status-good{% elif status_city_1 == 'Ошибка: Некорректное название города' %}status-warning{% else %}status-bad{% endif %}">{{ status_city_1 }}</p>
+        <p class="{% if status_city_1 == 'Благоприятные погодные условия' %}status-good{% elif status_city_1 == 'Неблагоприятные погодные условия' %}status-bad{% else %}status-warning{% endif %}">{{ status_city_1 }}</p>
     </div>
 
     <div class="weather-info">
         <h2>{{ city_2 }}</h2>
-        <p class="{% if status_city_2 == 'Благоприятные погодные условия' %}status-good{% elif status_city_2 == 'Ошибка: Некорректное название города' %}status-warning{% else %}status-bad{% endif %}">{{ status_city_2 }}</p>
+        <p class="{% if status_city_2 == 'Благоприятные погодные условия' %}status-good{% elif status_city_2 == 'Неблагоприятные погодные условия' %}status-bad{% else %}status-warning{% endif %}">{{ status_city_2 }}</p>
     </div>
 </body>
 </html>
