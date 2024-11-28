@@ -3,7 +3,7 @@ import requests
 import json
 import os
 
-API = "bSxseO5nsaAgbkjld3zBGMnyy3mbZlvr"
+API = "bSxseO5nsaAgbkjld3zBGMnyy3mbZlvr" #Твой API ключ
 
 
 class AccuWeather:
