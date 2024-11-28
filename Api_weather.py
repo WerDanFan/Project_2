@@ -7,17 +7,28 @@ API = "bSxseO5nsaAgbkjld3zBGMnyy3mbZlvr"
 
 
 class AccuWeather:
-    def __init__(self, api_key, path):
+    """
+    Класс для работы с погодой
+    """
+    def __init__(self, api_key: str, path: str):
         self.api_key = api_key
         self.location_key = 0
         self.path = path
 
-    def send_request(self, city):
+    def send_request(self, city: str):
+        """
+        Получает информацию и сохраняет в JSON
+        :param city: название города
+        """
         self.check_location_key(city)
         weather_data = self.get_weather()
         self.info_to_json(weather_data)
 
-    def check_location_key(self,city):
+    def check_location_key(self,city: str):
+        """
+        Проверяет наличие ключа у введенного города
+        :param city: название города
+        """
         if os.path.exists('keys_of_cities.json'):
             with open('keys_of_cities.json', 'r', encoding='utf-8') as f:
                 keys = json.load(f)
@@ -27,18 +38,30 @@ class AccuWeather:
                     self.get_location_key(city)
         else: self.get_location_key(city)
 
-    def load_city_keys(self):
+    def load_city_keys(self) -> dict:
+        """
+        Загружает ключи городов из JSON файла в словарь
+        :return: словарь вида {city_name: key ...}
+        """
         if os.path.exists('keys_of_cities.json'):
             with open('keys_of_cities.json', 'r', encoding='utf-8') as f:
                 return json.load(f)
         else:
             return {}
 
-    def save_city_keys(self, city_keys):
+    def save_city_keys(self, city_keys: dict):
+        """
+        Сохраняет JSON файл
+        :param city_keys: словарь вида {city_name: key ...}
+        """
         with open('keys_of_cities.json', 'w', encoding="utf-8") as f:
             json.dump(city_keys, f, indent=4)
 
-    def get_location_key(self, city):
+    def get_location_key(self, city: str):
+        """
+        Посылает запрос и получает ключ введенного города
+        :param city: название города
+        """
         location_url = f"http://dataservice.accuweather.com/locations/v1/cities/search?apikey={self.api_key}&q={city}"
         response = requests.get(location_url)
         location_data = response.json()
@@ -59,6 +82,9 @@ class AccuWeather:
             raise Exception("Упс. Неверно введён город")
 
     def get_weather(self):
+        """
+        Посылает запрос и получает погоду по ключу (self.location_key)
+        """
         weather_url = f"http://dataservice.accuweather.com/forecasts/v1/daily/1day/{self.location_key}?apikey={self.api_key}&details=true&metric=true"
         response = requests.get(weather_url)
         weather_data = response.json()
@@ -76,7 +102,11 @@ class AccuWeather:
             raise Exception("Упс. Неверно введён город")
 
 
-    def info_to_json(self, data):
+    def info_to_json(self, data: dict):
+        """
+        Загрузка погодных условий в JSON файл
+        :param data: данные о погоде
+        """
         temperature_min = data["DailyForecasts"][0]["Temperature"]["Minimum"]["Value"]
         temperature_max = data["DailyForecasts"][0]["Temperature"]["Maximum"]["Value"]
         humidity = data["DailyForecasts"][0]["Day"]["RelativeHumidity"]["Average"]
@@ -95,7 +125,12 @@ class AccuWeather:
             json.dump(result, f, indent=4)
 
 
-def check_bad_weather(path):
+def check_bad_weather(path: str) -> str:
+    """
+    Логика для определения благоприятности погодных условий
+    :param path: ссылка на JSON файл с погодными условиями
+    :return: Статус погодных условий (Благоприятные/Неблагоприятные погодные условия)
+    """
     with open(path, "r") as f:
         data = json.load(f)
     flag = True
